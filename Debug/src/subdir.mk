@@ -4,13 +4,22 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../src/BarnesHut.c 
+../src/BarnesHut.c \
+../src/exception.c \
+../src/genlib.c \
+../src/random.c 
 
 OBJS += \
-./src/BarnesHut.o 
+./src/BarnesHut.o \
+./src/exception.o \
+./src/genlib.o \
+./src/random.o 
 
 C_DEPS += \
-./src/BarnesHut.d 
+./src/BarnesHut.d \
+./src/exception.d \
+./src/genlib.d \
+./src/random.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

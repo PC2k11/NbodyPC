@@ -7,17 +7,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "BarnesHut.h"
+#include "random.h"
 #include <limits.h>
 #include <string.h>
 #include <math.h>
 
 node_t* null_childs[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
-node_t* bodies[];
+node_t* bodies; // sto provando i con i boodies come array a node_t, non array di punntatori!
 double diameter;
 double center[3];
 int curr = 0;
-node_t *root;
+node_t *root = NULL;
 
 void create_bodies();
 void compute_center_and_diameter();
@@ -28,6 +29,7 @@ void compute_center_of_mass(node_t* node);
 void compute_force(node_t* root, node_t* body, double diameter, int where);
 void recourse_force(node_t* root, node_t* body, double dsq);
 void advance(node_t* body);
+void deallocate_tree(node_t* node);
 
 int main(int argc, char* argv[]) {
 
@@ -53,20 +55,20 @@ int main(int argc, char* argv[]) {
 	epssq = eps * eps;
 	itolsq = 1.0 / (tol * tol);
 
-	*bodies = (node_t*) malloc(nbodies * sizeof(node_t));
+	bodies = (node_t*) malloc(nbodies * sizeof(node_t));
 
 	create_bodies();
 
 	int step = 0;
+	root = NULL;
 	//TODO: far partire papi
 	for (step = 0; step < steps; step++) {
 		compute_center_and_diameter();
 
-		//		root = new_node(0.0, center, NULL, NULL, null_childs, 1);
-		root = (node_t*) malloc(sizeof(struct node_t*)); // "new" is like "malloc"
+		root = malloc(sizeof(struct node_t*)); // "new" is like "malloc"
 
 		root->type = 1;
-		root->mass = 0.0;
+		root->mass = 12.0;
 		root->pos[0] = center[0];
 		root->pos[1] = center[1];
 		root->pos[2] = center[2];
@@ -82,25 +84,26 @@ int main(int argc, char* argv[]) {
 		double radius = diameter * 0.5;
 		int i = 0;
 		for (i = 0; i < nbodies; i++) {
-			insert(root, bodies[i], radius);
+			node_t node = bodies[i];
+			insert(&(*root), &node, radius);  // questo è il modo per passare i dati per riferimento... cioè mandare l'indirizzo della struttura puntata dal puntatore
 		}
 
 		curr = 0;
-		compute_center_of_mass(root);
+		compute_center_of_mass(&(*root));
 
 		for (i = 0; i < nbodies; i++) {
-			compute_force(root, bodies[i], diameter, step);
-			advance(bodies[i]);
+			compute_force(&(*root), &bodies[i], diameter, step);
+			advance(&bodies[i]);
 		}
 
-		free(root);
+		deallocate_tree(root);
 
 	}
 	int i = 0;
 	outputf = fopen("output", "w");
 	for (i = 0; i < nbodies; i++) {
-		fprintf(outputf, "%lf, %lf, %lf \n", bodies[i]->pos[0],
-				bodies[i]->pos[1], bodies[i]->pos[2]);
+		fprintf(outputf, "%lf, %lf, %lf \n", bodies[i].pos[0],
+				bodies[i].pos[1], bodies[i].pos[2]);
 		fflush(outputf);
 	}
 
@@ -117,20 +120,20 @@ int main(int argc, char* argv[]) {
  Parameters: m = 2^31-1, a=48271.
  */
 
-double random_generator(int seed, double min, double max) {
-	int m = INT_MAX;
-	int a = 48271;
-	double q = m / a;
-	double r = m % a;
-
-	double k = seed / q;
-	seed = a * (seed - k * q) - r * k;
-	if (seed < 1)
-		seed += m;
-	r = seed / m;
-	return r * (max - min) + min;
-
-}
+//double random_generator(int seed, double min, double max) {
+//	int m = INT_MAX;
+//	int a = 48271;
+//	double q = m / a;
+//	double r = m % a;
+//
+//	double k = seed / q;
+//	seed = a * (seed - k * q) - r * k;
+//	if (seed < 1)
+//		seed += m;
+//	r = seed / m;
+//	return r * (max - min) + min;
+//
+//}
 
 void create_bodies() {
 	int i = 0;
@@ -138,16 +141,23 @@ void create_bodies() {
 		double pos[3] = { 0.0, 0.0, 0.0 };
 		double vel[3] = { 0.0, 0.0, 0.0 };
 		double acc[3] = { 0.0, 0.0, 0.0 };
-		double mass = random_generator(rand(), 0.0, drand48() + 0.1);
-		pos[0] = random_generator(rand(), 0.0, drand48() + 0.1);
-		pos[1] = random_generator(rand(), 0.0, drand48() + 0.1);
-		pos[2] = random_generator(rand(), 0.0, drand48() + 0.1);
-		vel[0] = random_generator(rand(), 0.0, drand48() + 0.1);
-		vel[1] = random_generator(rand(), 0.0, drand48() + 0.1);
-		vel[2] = random_generator(rand(), 0.0, drand48() + 0.1);
+//		double mass = random_generator(rand(), 0.0, drand48() + 100.0);
+//		pos[0] = random_generator(rand(), 0.0, drand48() + 100.0);
+//		pos[1] = random_generator(rand(), 0.0, drand48() + 100.0);
+//		pos[2] = random_generator(rand(), 0.0, drand48() + 100.0);
+//		vel[0] = random_generator(rand(), 0.0, drand48() + 10.0);
+//		vel[1] = random_generator(rand(), 0.0, drand48() + 10.0);
+//		vel[2] = random_generator(rand(), 0.0, drand48() + 10.0);
+		double mass = RandomReal(0.0, 100.0);
+		pos[0] = RandomReal(0.0,100.0);
+		pos[1] = RandomReal(0.0,100.0);
+		pos[2] = RandomReal(0.0,100.0);
+		vel[0] = RandomReal(0.0, 10.0);
+		vel[1] = RandomReal(0.0, 10.0);
+		vel[2] = RandomReal(0.0, 10.0);
 
 		node_t *body = new_node(mass, pos, acc, vel, null_childs, 0);
-		bodies[i] = body;
+		bodies[i] = (*body);
 	}
 }
 
@@ -157,9 +167,9 @@ void compute_center_and_diameter() {
 
 	int i = 0;
 	for (i = 0; i < nbodies; i++) {
-		pos[0] = bodies[i]->pos[0];
-		pos[1] = bodies[i]->pos[1];
-		pos[2] = bodies[i]->pos[2];
+		pos[0] = bodies[i].pos[0];
+		pos[1] = bodies[i].pos[1];
+		pos[2] = bodies[i].pos[2];
 
 		if (min[0] > pos[0])
 			min[0] = pos[0];
@@ -212,28 +222,150 @@ void insert(node_t* sub_root, node_t* node, double r) {
 		z = r;
 	}
 
-	//creiamo un array di nodi che puntano ai childs del nodo passato come param
-	node_t *childs[8] = { sub_root->cell.internal_node.child0,
-			sub_root->cell.internal_node.child1,
-			sub_root->cell.internal_node.child2,
-			sub_root->cell.internal_node.child3,
-			sub_root->cell.internal_node.child4,
-			sub_root->cell.internal_node.child5,
-			sub_root->cell.internal_node.child6,
-			sub_root->cell.internal_node.child7 };
-	if (childs[i] == NULL) {
-		childs[i] = node;
-	} else if (node->type == 1) {
-		insert(childs[i], node, 0.5 * r);
-	} else {
-		double rh = 0.5 * r;
-		double position[3] = { sub_root->pos[0] - rh + x, sub_root->pos[1] - rh
-				+ y, sub_root->pos[2] - rh + z };
-		node_t *cell = new_node(0.0, position, NULL, NULL, null_childs, 1);
-		insert(cell, node, rh);
-		insert(cell, childs[i], rh);
-		childs[i] = cell;
+	switch (i) {
+	case 0:
+		if (sub_root->cell.internal_node.child0 == NULL) {
+			sub_root->cell.internal_node.child0 = node;
+		} else if (node->type == 1) {
+			insert(&(*(sub_root->cell.internal_node.child0)), &(*node), 0.5 * r);
+		} else {
+			double rh = 0.5 * r;
+			double position[3] = { sub_root->pos[0] - rh + x, sub_root->pos[1]
+					- rh + y, sub_root->pos[2] - rh + z };
+			node_t *cell = new_node(0.0, position, NULL, NULL, null_childs, 1);
+			insert(&(*cell), &(*node), rh);
+			insert(&(*cell), &(*sub_root->cell.internal_node.child0), rh);
+			sub_root->cell.internal_node.child0 = cell;
+		}
+		break;
+	case 1:
+		if (sub_root->cell.internal_node.child1 == NULL) {
+			sub_root->cell.internal_node.child1 = node;
+		} else if (node->type == 1) {
+			insert(&(*sub_root->cell.internal_node.child1), &(*node), 0.5 * r);
+		} else {
+			double rh = 0.5 * r;
+			double position[3] = { sub_root->pos[0] - rh + x, sub_root->pos[1]
+					- rh + y, sub_root->pos[2] - rh + z };
+			node_t *cell = new_node(0.0, position, NULL, NULL, null_childs, 1);
+			insert(&(*cell), &(*node), rh);
+			insert(&(*cell), &(*sub_root->cell.internal_node.child1), rh);
+			sub_root->cell.internal_node.child1 = cell;
+		}
+		break;
+	case 2:
+		if (sub_root->cell.internal_node.child2 == NULL) {
+			sub_root->cell.internal_node.child2 = node;
+		} else if (node->type == 1) {
+			insert(&(*sub_root->cell.internal_node.child2), &(*node), 0.5 * r);
+		} else {
+			double rh = 0.5 * r;
+			double position[3] = { sub_root->pos[0] - rh + x, sub_root->pos[1]
+					- rh + y, sub_root->pos[2] - rh + z };
+			node_t *cell = new_node(0.0, position, NULL, NULL, null_childs, 1);
+			insert(&(*cell), &(*node), rh);
+			insert(&(*cell), &(*sub_root->cell.internal_node.child2), rh);
+			sub_root->cell.internal_node.child2 = cell;
+		}
+		break;
+	case 3:
+		if (sub_root->cell.internal_node.child3 == NULL) {
+			sub_root->cell.internal_node.child3 = node;
+		} else if (node->type == 1) {
+			insert(&(*sub_root->cell.internal_node.child3), &(*node), 0.5 * r);
+		} else {
+			double rh = 0.5 * r;
+			double position[3] = { sub_root->pos[0] - rh + x, sub_root->pos[1]
+					- rh + y, sub_root->pos[2] - rh + z };
+			node_t *cell = new_node(0.0, position, NULL, NULL, null_childs, 1);
+			insert(&(*cell), &(*node), rh);
+			insert(&(*cell), &(*sub_root->cell.internal_node.child3), rh);
+			sub_root->cell.internal_node.child3 = cell;
+		}
+		break;
+	case 4:
+		if (sub_root->cell.internal_node.child4 == NULL) {
+			sub_root->cell.internal_node.child4 = node;
+		} else if (node->type == 1) {
+			insert(&(*sub_root->cell.internal_node.child4), &(*node), 0.5 * r);
+		} else {
+			double rh = 0.5 * r;
+			double position[3] = { sub_root->pos[0] - rh + x, sub_root->pos[1]
+					- rh + y, sub_root->pos[2] - rh + z };
+			node_t *cell = new_node(0.0, position, NULL, NULL, null_childs, 1);
+			insert(&(*cell), &(*node), rh);
+			insert(&(*cell), &(*sub_root->cell.internal_node.child4), rh);
+			sub_root->cell.internal_node.child4 = cell;
+		}
+		break;
+	case 5:
+		if (sub_root->cell.internal_node.child5 == NULL) {
+			sub_root->cell.internal_node.child5 = node;
+		} else if (node->type == 1) {
+			insert(&(*sub_root->cell.internal_node.child5), &(*node), 0.5 * r);
+		} else {
+			double rh = 0.5 * r;
+			double position[3] = { sub_root->pos[0] - rh + x, sub_root->pos[1]
+					- rh + y, sub_root->pos[2] - rh + z };
+			node_t *cell = new_node(0.0, position, NULL, NULL, null_childs, 1);
+			insert(&(*cell), &(*node), rh);
+			insert(&(*cell), &(*sub_root->cell.internal_node.child5), rh);
+			sub_root->cell.internal_node.child5 = cell;
+		}
+		break;
+	case 6:
+		if (sub_root->cell.internal_node.child6 == NULL) {
+			sub_root->cell.internal_node.child6 = node;
+		} else if (node->type == 1) {
+			insert(&(*sub_root->cell.internal_node.child6), &(*node), 0.5 * r);
+		} else {
+			double rh = 0.5 * r;
+			double position[3] = { sub_root->pos[0] - rh + x, sub_root->pos[1]
+					- rh + y, sub_root->pos[2] - rh + z };
+			node_t *cell = new_node(0.0, position, NULL, NULL, null_childs, 1);
+			insert(&(*cell), &(*node), rh);
+			insert(&(*cell), &(*sub_root->cell.internal_node.child6), rh);
+			sub_root->cell.internal_node.child6 = cell;
+		}
+		break;
+	default:
+		if (sub_root->cell.internal_node.child7 == NULL) {
+			sub_root->cell.internal_node.child7 = node;
+		} else if (node->type == 1) {
+			insert(&(*sub_root->cell.internal_node.child7), &(*node), 0.5 * r);
+		} else {
+			double rh = 0.5 * r;
+			double position[3] = { sub_root->pos[0] - rh + x, sub_root->pos[1]
+					- rh + y, sub_root->pos[2] - rh + z };
+			node_t *cell = new_node(0.0, position, NULL, NULL, null_childs, 1);
+			insert(&(*cell), &(*node), rh);
+			insert(&(*cell), &(*sub_root->cell.internal_node.child7), rh);
+			sub_root->cell.internal_node.child7 = cell;
+		}
+		break;
 	}
+	//	//creiamo un array di nodi che puntano ai childs del nodo passato come param
+	//	node_t *childs[8] = { sub_root->cell.internal_node.child0,
+	//			sub_root->cell.internal_node.child1,
+	//			sub_root->cell.internal_node.child2,
+	//			sub_root->cell.internal_node.child3,
+	//			sub_root->cell.internal_node.child4,
+	//			sub_root->cell.internal_node.child5,
+	//			sub_root->cell.internal_node.child6,
+	//			sub_root->cell.internal_node.child7 };
+	//	if (childs[i] == NULL) {
+	//		childs[i] = node;
+	//	} else if (node->type == 1) {
+	//		insert(childs[i], node, 0.5 * r);
+	//	} else {
+	//		double rh = 0.5 * r;
+	//		double position[3] = { sub_root->pos[0] - rh + x, sub_root->pos[1] - rh
+	//				+ y, sub_root->pos[2] - rh + z };
+	//		node_t *cell = new_node(0.0, position, NULL, NULL, null_childs, 1);
+	//		insert(cell, node, rh);
+	//		insert(cell, childs[i], rh);
+	//		childs[i] = cell;
+	//	}
 }
 
 node_t* new_node(double mass, double pos[3], double acc[3], double vel[3],
@@ -268,11 +400,11 @@ node_t* new_node(double mass, double pos[3], double acc[3], double vel[3],
 }
 void compute_center_of_mass(node_t* node) {
 	double m, p[3] = { 0.0, 0.0, 0.0 };
-	node_t *childs[8] = { node->cell.internal_node.child0,
-			node->cell.internal_node.child1, node->cell.internal_node.child2,
-			node->cell.internal_node.child3, node->cell.internal_node.child4,
-			node->cell.internal_node.child5, node->cell.internal_node.child6,
-			node->cell.internal_node.child7 };
+	node_t *childs[8] = { &(*node->cell.internal_node.child0),
+			&(*node->cell.internal_node.child1), &(*node->cell.internal_node.child2),
+			&(*node->cell.internal_node.child3), &(*node->cell.internal_node.child4),
+			&(*node->cell.internal_node.child5), &(*node->cell.internal_node.child6),
+			&(*node->cell.internal_node.child7) };  // forse così si deve fare per creare una lista che punta agli elementi figli
 	node_t* ch;
 
 	int j = 0;
@@ -285,9 +417,9 @@ void compute_center_of_mass(node_t* node) {
 			childs[j++] = ch;
 
 			if (ch->type == 0) {
-				bodies[curr++] = ch;
+				bodies[curr++] = *ch;
 			} else {
-				compute_center_of_mass(ch);
+				compute_center_of_mass(&(*ch));
 			}
 
 			m = ch->mass;
@@ -412,4 +544,21 @@ void advance(node_t* body) {
 	body->cell.leaf.vel[1] = velh[1] + dvel[1];
 	body->cell.leaf.vel[2] = velh[2] + dvel[2];
 
+}
+
+void deallocate_tree(node_t* node) {
+
+	if (node->type == 0)
+		free(node);
+	else {
+		deallocate_tree(node->cell.internal_node.child0);
+		deallocate_tree(node->cell.internal_node.child1);
+		deallocate_tree(node->cell.internal_node.child2);
+		deallocate_tree(node->cell.internal_node.child3);
+		deallocate_tree(node->cell.internal_node.child4);
+		deallocate_tree(node->cell.internal_node.child5);
+		deallocate_tree(node->cell.internal_node.child6);
+		deallocate_tree(node->cell.internal_node.child7);
+		free(node);
+	}
 }
