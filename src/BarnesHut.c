@@ -14,7 +14,7 @@
 
 node_t* null_childs[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
-node_t* bodies; // sto provando i con i boodies come array a node_t, non array di punntatori!
+node_t** bodies; // sto provando i con i boodies come array a node_t, non array di punntatori!
 double diameter;
 double center[3];
 int curr = 0;
@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
 	epssq = eps * eps;
 	itolsq = 1.0 / (tol * tol);
 
-	bodies = (node_t*) malloc(nbodies * sizeof(node_t));
+	bodies = (node_t**) malloc(nbodies * sizeof(node_t));
 
 	create_bodies();
 
@@ -84,16 +84,15 @@ int main(int argc, char* argv[]) {
 		double radius = diameter * 0.5;
 		int i = 0;
 		for (i = 0; i < nbodies; i++) {
-			node_t node = bodies[i];
-			insert(&(*root), &node, radius);  // questo è il modo per passare i dati per riferimento... cioè mandare l'indirizzo della struttura puntata dal puntatore
+			insert(&(*root), &(*bodies[i]), radius);  // questo è il modo per passare i dati per riferimento... cioè mandare l'indirizzo della struttura puntata dal puntatore
 		}
 
 		curr = 0;
 		compute_center_of_mass(&(*root));
 
 		for (i = 0; i < nbodies; i++) {
-			compute_force(&(*root), &bodies[i], diameter, step);
-			advance(&bodies[i]);
+			compute_force(&(*root), &(*bodies[i]), diameter, step);
+			advance(&(*bodies[i]));
 		}
 
 		deallocate_tree(root);
@@ -102,8 +101,8 @@ int main(int argc, char* argv[]) {
 	int i = 0;
 	outputf = fopen("output", "w");
 	for (i = 0; i < nbodies; i++) {
-		fprintf(outputf, "%lf, %lf, %lf \n", bodies[i].pos[0],
-				bodies[i].pos[1], bodies[i].pos[2]);
+		fprintf(outputf, "%lf, %lf, %lf \n", bodies[i]->pos[0],
+				bodies[i]->pos[1], bodies[i]->pos[2]);
 		fflush(outputf);
 	}
 
@@ -148,7 +147,7 @@ void create_bodies() {
 //		vel[0] = random_generator(rand(), 0.0, drand48() + 10.0);
 //		vel[1] = random_generator(rand(), 0.0, drand48() + 10.0);
 //		vel[2] = random_generator(rand(), 0.0, drand48() + 10.0);
-		double mass = RandomReal(0.0, 100.0);
+		double mass = RandomReal(0.2, 100.0);
 		pos[0] = RandomReal(0.0,100.0);
 		pos[1] = RandomReal(0.0,100.0);
 		pos[2] = RandomReal(0.0,100.0);
@@ -157,7 +156,7 @@ void create_bodies() {
 		vel[2] = RandomReal(0.0, 10.0);
 
 		node_t *body = new_node(mass, pos, acc, vel, null_childs, 0);
-		bodies[i] = (*body);
+		bodies[i] = body;
 	}
 }
 
@@ -167,9 +166,9 @@ void compute_center_and_diameter() {
 
 	int i = 0;
 	for (i = 0; i < nbodies; i++) {
-		pos[0] = bodies[i].pos[0];
-		pos[1] = bodies[i].pos[1];
-		pos[2] = bodies[i].pos[2];
+		pos[0] = bodies[i]->pos[0];
+		pos[1] = bodies[i]->pos[1];
+		pos[2] = bodies[i]->pos[2];
 
 		if (min[0] > pos[0])
 			min[0] = pos[0];
@@ -417,7 +416,7 @@ void compute_center_of_mass(node_t* node) {
 			childs[j++] = ch;
 
 			if (ch->type == 0) {
-				bodies[curr++] = *ch;
+				bodies[curr++] = ch;
 			} else {
 				compute_center_of_mass(&(*ch));
 			}
