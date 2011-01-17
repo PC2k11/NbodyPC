@@ -2,7 +2,7 @@
  * burnesHut.h
  *
  *  Created on: 13/gen/2011
- *      Author: claudio
+ *      Author: Claudio e Pino
  */
 
 #ifndef BURNESHUT_H_
