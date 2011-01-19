@@ -31,7 +31,7 @@
 								<option id="gnu.c.compiler.exe.debug.option.debugging.level.1077715274" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1953802560" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
-							<tool command="gcc -std=c99 -lm" id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1543445886" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug">
+							<tool command="gcc -std=c99 -lm -lgsl -lgslcblas" id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1543445886" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug">
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.900744934" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
