@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "BarnesHut.h"
-#include <gsl/gsl_rng.h>
 #include <string.h>
 #include <math.h>
 
@@ -51,13 +50,17 @@ int main(int argc, char* argv[]) {
 	fscanf(inputf, "%lf", &eps);
 	fscanf(inputf, "%lf", &tol);
 
+
+
 	fclose(inputf);
+
+	bodies = malloc(nbodies * sizeof(node_t*));
+	create_bodies(&(*inputf));
+
+
 	dthf = 0.5 * dt;
 	epssq = eps * eps;
 	itolsq = 1.0 / (tol * tol);
-
-	bodies = malloc(nbodies * sizeof(node_t*));
-	create_bodies();
 
 	int step = 0;
 	root = NULL;
@@ -137,42 +140,69 @@ int main(int argc, char* argv[]) {
 //}
 
 void create_bodies() {
+	FILE* inputdataf = fopen("inputData","r");
 	int i = 0;
-	const gsl_rng_type *T;
-	gsl_rng *r;
-	gsl_rng_env_setup();
-
-	T = gsl_rng_default;
-	r = gsl_rng_alloc(T);
+	char line[100];
+	char* token;
+	char* end;
+	double d = 0.0;
+	//	const gsl_rng_type *T;
+	//	gsl_rng *r;
+	//	gsl_rng_env_setup();
+	//
+	//	T = gsl_rng_default;
+	//	r = gsl_rng_alloc(T);
 
 	for (i = 0; i < nbodies; i++) {
 
 		bodies[i] = malloc(sizeof(node_t));
 
-		double pos[3] = { 0.0, 0.0, 0.0 };
-		double vel[3] = { 0.0, 0.0, 0.0 };
-		double acc[3] = { 0.0, 0.0, 0.0 };
-		double mass = gsl_rng_uniform(r);
-		pos[0] = gsl_rng_uniform(r);
-		pos[1] = gsl_rng_uniform(r);
-		pos[2] = gsl_rng_uniform(r);
-		vel[0] = gsl_rng_uniform(r);
-		vel[1] = gsl_rng_uniform(r);
-		vel[2] = gsl_rng_uniform(r);
+		//		double mass = gsl_rng_uniform(r);
+		//		pos[0] = gsl_rng_uniform(r);
+		//		pos[1] = gsl_rng_uniform(r);
+		//		pos[2] = gsl_rng_uniform(r);
+		//		vel[0] = gsl_rng_uniform(r);
+		//		vel[1] = gsl_rng_uniform(r);
+		//		vel[2] = gsl_rng_uniform(r);
 
-		bodies[i]->type = 0;
-		bodies[i]->mass = mass;
-		bodies[i]->pos[0] = pos[0];
-		bodies[i]->pos[1] = pos[1];
-		bodies[i]->pos[2] = pos[2];
-		bodies[i]->cell.leaf.acc[0] = acc[0];
-		bodies[i]->cell.leaf.acc[1] = acc[1];
-		bodies[i]->cell.leaf.acc[2] = acc[2];
-		bodies[i]->cell.leaf.vel[0] = vel[0];
-		bodies[i]->cell.leaf.vel[1] = vel[1];
-		bodies[i]->cell.leaf.vel[2] = vel[2];
+
+		fgets(line, 100, inputdataf);
+
+
+//		printf("%s\n", line);
+
+		token = strtok(line, " ");
+
+		d = strtod(token, &end);
+		bodies[i]->mass = d;
+//		printf("%lf\n",d);
+		token = strtok(NULL, " ");
+		d = strtod(token, &end);
+		bodies[i]->pos[0] = d;
+		token = strtok(NULL, " ");
+		d = strtod(token, &end);
+		bodies[i]->pos[1] = d;
+		token = strtok(NULL, " ");
+		d = strtod(token, &end);
+		bodies[i]->pos[2] = d;
+		token = strtok(NULL, " ");
+		d = strtod(token, &end);
+		bodies[i]->cell.leaf.vel[0] = d;
+		token = strtok(NULL, " ");
+		d = strtod(token, &end);
+		bodies[i]->cell.leaf.vel[1] = d;
+		token = strtok(NULL, " ");
+		d = strtod(token, &end);
+		bodies[i]->cell.leaf.vel[2] = d;
+
+
+		bodies[i]->cell.leaf.acc[0] = 0.0;
+		bodies[i]->cell.leaf.acc[1] = 0.0;
+		bodies[i]->cell.leaf.acc[2] = 0.0;
+
 	}
-	gsl_rng_free(r);
+
+	fclose(inputdataf);
 }
 void compute_center_and_diameter() {
 	double min[3] = { 1.0e90, 1.0e90, 1.0e90 }, max[3] = { -1.0e90, -1.0e90,
@@ -235,7 +265,7 @@ void insert(node_t* sub_root, node_t* node, double r) {
 		z = r;
 	}
 	//creiamo un array di nodi che puntano ai childs del nodo passato come param
-//	printf("la i =%d \n", i);
+	//	printf("la i =%d \n", i);
 	if (sub_root->cell.childs[i] == NULL) {
 		sub_root->cell.childs[i] = node;
 	} else if (node->type == 1) {
@@ -353,27 +383,21 @@ void recourse_force(node_t* root, node_t* body, double dsq) {
 				if (root->cell.childs[1] != NULL) {
 					recourse_force(root->cell.childs[1], body, dsq);
 					if (root->cell.childs[2] != NULL) {
-						recourse_force(root->cell.childs[2], body,
-								dsq);
+						recourse_force(root->cell.childs[2], body, dsq);
 						if (root->cell.childs[3] != NULL) {
-							recourse_force(root->cell.childs[3],
-									body, dsq);
+							recourse_force(root->cell.childs[3], body, dsq);
 							if (root->cell.childs[4] != NULL) {
-								recourse_force(root->cell.childs[4],
-										body, dsq);
+								recourse_force(root->cell.childs[4], body, dsq);
 								if (root->cell.childs[5] != NULL) {
-									recourse_force(
-											root->cell.childs[5],
-											body, dsq);
+									recourse_force(root->cell.childs[5], body,
+											dsq);
 									if (root->cell.childs[6] != NULL) {
-										recourse_force(
-												root->cell.childs[6],
+										recourse_force(root->cell.childs[6],
 												body, dsq);
-										if (root->cell.childs[7]
-												!= NULL) {
+										if (root->cell.childs[7] != NULL) {
 											recourse_force(
-													root->cell.childs[7],
-													body, dsq);
+													root->cell.childs[7], body,
+													dsq);
 										}
 									}
 								}
@@ -427,7 +451,6 @@ void advance(node_t* body) {
 }
 
 void deallocate_tree(node_t* node) {
-
 
 	if ((node == NULL) || (node->type == 0))
 		return;

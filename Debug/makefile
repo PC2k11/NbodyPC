@@ -23,19 +23,19 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: NBody
+all: NbodyPC
 
 # Tool invocations
-NBody: $(OBJS) $(USER_OBJS)
+NbodyPC: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -std=c99 -lm -lgsl -lgslcblas  -o"NBody" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -std=c99 -lm  -o"NbodyPC" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(OBJS)$(C_DEPS)$(EXECUTABLES) NBody
+	-$(RM) $(OBJS)$(C_DEPS)$(EXECUTABLES) NbodyPC
 	-@echo ' '
 
 .PHONY: all clean dependents
