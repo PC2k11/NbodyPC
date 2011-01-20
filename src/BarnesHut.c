@@ -9,6 +9,7 @@
 #include "BarnesHut.h"
 #include <string.h>
 #include <math.h>
+#include "stack.h"
 
 //node_t* null_childs[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
@@ -40,7 +41,7 @@ int main(int argc, char* argv[]) {
 	inputf = fopen(inputfile, "r");
 
 	if (inputf == NULL) {
-		printf("impossibile leggere ad file");
+		printf("impossibile leggere da file");
 		exit(1);
 	}
 
@@ -247,38 +248,68 @@ void compute_center_and_diameter() {
 
 void insert(node_t* sub_root, node_t* node, double r) {
 
+
 	int i = 0;
+	stackADT stack = NewStack();
+
 	double x = 0.0, y = 0.0, z = 0.0;
 
-	if (sub_root->pos[0] < node->pos[0]) {
-		i = 1;
-		x = r;
-	}
+	do {
+		if (sub_root->pos[0] < node->pos[0]) {
+			i = 1;
+			x = r;
+		}
 
-	if (sub_root->pos[1] < node->pos[1]) {
-		i += 2;
-		y = r;
-	}
+		if (sub_root->pos[1] < node->pos[1]) {
+			i += 2;
+			y = r;
+		}
 
-	if (sub_root->pos[2] < node->pos[2]) {
-		i += 4;
-		z = r;
-	}
-	//creiamo un array di nodi che puntano ai childs del nodo passato come param
-	//	printf("la i =%d \n", i);
-	if (sub_root->cell.childs[i] == NULL) {
-		sub_root->cell.childs[i] = node;
-	} else if (node->type == 1) {
-		insert(&(*sub_root->cell.childs[i]), &(*node), 0.5 * r);
-	} else {
-		double rh = 0.5 * r;
-		double position[3] = { sub_root->pos[0] - rh + x, sub_root->pos[1] - rh
-				+ y, sub_root->pos[2] - rh + z };
-		node_t *cell = new_node(0.0, position, NULL, NULL, 1);
-		insert(&(*cell), &(*node), rh);
-		insert(&(*cell), &(*sub_root->cell.childs[i]), rh);
-		sub_root->cell.childs[i] = cell;
-	}
+		if (sub_root->pos[2] < node->pos[2]) {
+			i += 4;
+			z = r;
+		}
+
+		if (sub_root->cell.childs[i] == NULL) {
+			sub_root->cell.childs[i] = node;
+			sub_root = Pop(stack);
+		} else if (node->type == 1) {
+			//				insert(&(*sub_root->cell.childs[i]), &(*node), 0.5 * r);
+			r *= 0.5;
+			Push(stack, sub_root);
+			sub_root = sub_root->cell.childs[i];
+		} else {
+			double rh = 0.5 * r;
+			double position[3] = { sub_root->pos[0] - rh + x, sub_root->pos[1]
+					- rh + y, sub_root->pos[2] - rh + z };
+			node_t *cell = new_node(0.0, position, NULL, NULL, 1);
+			//				insert(&(*cell), &(*node), rh);
+			if (cell->pos[0] < node->pos[0]) {
+				i = 1;
+				x = r;
+			}
+
+			if (cell->pos[1] < node->pos[1]) {
+				i += 2;
+				y = r;
+			}
+
+			if (cell->pos[2] < node->pos[2]) {
+				i += 4;
+				z = r;
+			}
+
+			cell->cell.childs[i] = node;
+			sub_root->cell.childs[i] = cell;
+			Push(stack, sub_root);
+			sub_root = cell;
+			node = &(*sub_root->cell.childs[i]);
+			r = rh;
+//			insert(&(*cell), &(*sub_root->cell.childs[i]), rh);
+		}
+	} while (StackIsEmpty(stack));
+
+	FreeStack(stack);
 }
 
 node_t* new_node(double mass, double pos[3], double acc[3], double vel[3],

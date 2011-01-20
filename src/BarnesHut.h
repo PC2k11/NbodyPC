@@ -5,8 +5,8 @@
  *      Author: Claudio e Pino
  */
 
-#ifndef BURNESHUT_H_
-#define BURNESHUT_H_
+#ifndef BarnesHut_h_
+#define BarnesHut_h_
 
 int nbodies = 1000;
 double dt = 0.01;
