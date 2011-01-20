@@ -9,26 +9,26 @@
 #include "BarnesHut.h"
 #include <string.h>
 #include <math.h>
-#include "stack.h"
+#include "genlib.h"
 
 //node_t* null_childs[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
 node_t** bodies;
-double diameter;
-double seed = 1234567890;
-double center[3];
+long double diameter;
+long double seed = 1234567890;
+long double center[3];
 int curr = 0;
 node_t *root = NULL;
 
-//double random_generator(double min, double max);
+//long double random_generator(long double min, long double max);
 void create_bodies();
 void compute_center_and_diameter();
-void insert(node_t* sub_root, node_t* node, double r);
-node_t* new_node(double mass, double pos[3], double acc[3], double vel[3],
+void insert(node_t* sub_root, node_t* node, long double r);
+node_t* new_node(long double mass, long double pos[3], long double acc[3], long double vel[3],
 		int type);
 void compute_center_of_mass(node_t* node);
-void compute_force(node_t* root, node_t* body, double diameter, int where);
-void recourse_force(node_t* root, node_t* body, double dsq);
+void compute_force(node_t* root, node_t* body, long double diameter, int where);
+void recourse_force(node_t* root, node_t* body, long double dsq);
 void advance(node_t* body);
 void deallocate_tree(node_t* node);
 
@@ -47,16 +47,16 @@ int main(int argc, char* argv[]) {
 
 	fscanf(inputf, "%d", &nbodies);
 	fscanf(inputf, "%d", &steps);
-	fscanf(inputf, "%lf", &dt);
-	fscanf(inputf, "%lf", &eps);
-	fscanf(inputf, "%lf", &tol);
+	fscanf(inputf, "%Lf", &dt);
+	fscanf(inputf, "%Lf", &eps);
+	fscanf(inputf, "%Lf", &tol);
 
 
 
 	fclose(inputf);
 
 	bodies = malloc(nbodies * sizeof(node_t*));
-	create_bodies(&(*inputf));
+	create_bodies();
 
 
 	dthf = 0.5 * dt;
@@ -85,12 +85,12 @@ int main(int argc, char* argv[]) {
 		root->cell.childs[6] = NULL;
 		root->cell.childs[7] = NULL;
 
-		double radius = diameter * 0.5;
+		long double radius = diameter * 0.5;
+
 		int i = 0;
 		for (i = 0; i < nbodies; i++) {
 			insert(&(*root), &(*bodies[i]), radius); // questo è il modo per passare i dati per riferimento... cioè mandare l'indirizzo della struttura puntata dal puntatore
 		}
-
 		curr = 0;
 		compute_center_of_mass(&(*root));
 
@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
 	int i = 0;
 	outputf = fopen("output", "w");
 	for (i = 0; i < nbodies; i++) {
-		fprintf(outputf, "%lf, %lf, %lf \n", bodies[i]->pos[0],
+		fprintf(outputf, "%Lf, %Lf, %Lf \n", bodies[i]->pos[0],
 				bodies[i]->pos[1], bodies[i]->pos[2]);
 		fflush(outputf);
 	}
@@ -123,13 +123,13 @@ int main(int argc, char* argv[]) {
  Parameters: m = 2^31-1, a=48271.
  */
 
-//double random_generator(double min, double max) {
+//long double random_generator(long double min, long double max) {
 //	int m = INT_MAX;
 //	int a = 48271;
-//	double q = m / a;
-//	double r = m % a;
+//	long double q = m / a;
+//	long double r = m % a;
 //
-//	double k = seed / q;
+//	long double k = seed / q;
 //	seed = a * (seed - k * q) - r * k;
 //	if (seed < 1)
 //		seed += m;
@@ -146,7 +146,7 @@ void create_bodies() {
 	char line[100];
 	char* token;
 	char* end;
-	double d = 0.0;
+	long double d = 0.0;
 	//	const gsl_rng_type *T;
 	//	gsl_rng *r;
 	//	gsl_rng_env_setup();
@@ -156,9 +156,10 @@ void create_bodies() {
 
 	for (i = 0; i < nbodies; i++) {
 
+		printf("i = %d \n", i);
 		bodies[i] = malloc(sizeof(node_t));
 
-		//		double mass = gsl_rng_uniform(r);
+		//		long double mass = gsl_rng_uniform(r);
 		//		pos[0] = gsl_rng_uniform(r);
 		//		pos[1] = gsl_rng_uniform(r);
 		//		pos[2] = gsl_rng_uniform(r);
@@ -174,27 +175,33 @@ void create_bodies() {
 
 		token = strtok(line, " ");
 
-		d = strtod(token, &end);
+		d = strtold(token, &end);
 		bodies[i]->mass = d;
-//		printf("%lf\n",d);
+		printf("%Lf\n",d);
 		token = strtok(NULL, " ");
-		d = strtod(token, &end);
+		d = strtold(token, &end);
 		bodies[i]->pos[0] = d;
+		printf("%Lf\n",d);
 		token = strtok(NULL, " ");
-		d = strtod(token, &end);
+		d = strtold(token, &end);
 		bodies[i]->pos[1] = d;
+		printf("%Lf\n",d);
 		token = strtok(NULL, " ");
-		d = strtod(token, &end);
+		d = strtold(token, &end);
 		bodies[i]->pos[2] = d;
+		printf("%Lf\n",d);
 		token = strtok(NULL, " ");
-		d = strtod(token, &end);
+		d = strtold(token, &end);
 		bodies[i]->cell.leaf.vel[0] = d;
+		printf("%Lf\n",d);
 		token = strtok(NULL, " ");
-		d = strtod(token, &end);
+		d = strtold(token, &end);
 		bodies[i]->cell.leaf.vel[1] = d;
+		printf("%Lf\n",d);
 		token = strtok(NULL, " ");
-		d = strtod(token, &end);
+		d = strtold(token, &end);
 		bodies[i]->cell.leaf.vel[2] = d;
+		printf("%Lf\n",d);
 
 
 		bodies[i]->cell.leaf.acc[0] = 0.0;
@@ -206,7 +213,7 @@ void create_bodies() {
 	fclose(inputdataf);
 }
 void compute_center_and_diameter() {
-	double min[3] = { 1.0e90, 1.0e90, 1.0e90 }, max[3] = { -1.0e90, -1.0e90,
+	long double min[3] = { 1.0e90, 1.0e90, 1.0e90 }, max[3] = { -1.0e90, -1.0e90,
 			-1.0e90 }, pos[3];
 
 	int i = 0;
@@ -246,15 +253,15 @@ void compute_center_and_diameter() {
 	}
 }
 
-void insert(node_t* sub_root, node_t* node, double r) {
+void insert(node_t* sub_root, node_t* node, long double r) {
+
+	bool finished = FALSE;
 
 
-	int i = 0;
-	stackADT stack = NewStack();
-
-	double x = 0.0, y = 0.0, z = 0.0;
+	long double x = 0.0, y = 0.0, z = 0.0;
 
 	do {
+		int i = 0;
 		if (sub_root->pos[0] < node->pos[0]) {
 			i = 1;
 			x = r;
@@ -272,47 +279,42 @@ void insert(node_t* sub_root, node_t* node, double r) {
 
 		if (sub_root->cell.childs[i] == NULL) {
 			sub_root->cell.childs[i] = node;
-			sub_root = Pop(stack);
+			finished = TRUE;
 		} else if (node->type == 1) {
 			//				insert(&(*sub_root->cell.childs[i]), &(*node), 0.5 * r);
 			r *= 0.5;
-			Push(stack, sub_root);
 			sub_root = sub_root->cell.childs[i];
 		} else {
-			double rh = 0.5 * r;
-			double position[3] = { sub_root->pos[0] - rh + x, sub_root->pos[1]
+			long double rh = 0.5 * r;
+			long double position[3] = { sub_root->pos[0] - rh + x, sub_root->pos[1]
 					- rh + y, sub_root->pos[2] - rh + z };
 			node_t *cell = new_node(0.0, position, NULL, NULL, 1);
 			//				insert(&(*cell), &(*node), rh);
+			int k = 0;
 			if (cell->pos[0] < node->pos[0]) {
-				i = 1;
-				x = r;
+				k = 1;
 			}
 
 			if (cell->pos[1] < node->pos[1]) {
-				i += 2;
-				y = r;
+				k += 2;
 			}
 
 			if (cell->pos[2] < node->pos[2]) {
-				i += 4;
-				z = r;
+				k += 4;
 			}
 
-			cell->cell.childs[i] = node;
+			cell->cell.childs[k] = node;
+			node_t* tmp = &(*sub_root->cell.childs[i]);
 			sub_root->cell.childs[i] = cell;
-			Push(stack, sub_root);
 			sub_root = cell;
-			node = &(*sub_root->cell.childs[i]);
+			node = tmp;
 			r = rh;
 //			insert(&(*cell), &(*sub_root->cell.childs[i]), rh);
 		}
-	} while (StackIsEmpty(stack));
-
-	FreeStack(stack);
+	} while (!finished);
 }
 
-node_t* new_node(double mass, double pos[3], double acc[3], double vel[3],
+node_t* new_node(long double mass, long double pos[3], long double acc[3], long double vel[3],
 		int type) {
 	node_t* node = malloc(sizeof(node_t)); // "new" is like "malloc"
 	node->type = type;
@@ -342,7 +344,7 @@ node_t* new_node(double mass, double pos[3], double acc[3], double vel[3],
 	return (node);
 }
 void compute_center_of_mass(node_t* node) {
-	double m, p[3] = { 0.0, 0.0, 0.0 };
+	long double m, p[3] = { 0.0, 0.0, 0.0 };
 	//		node_t* firstChild = node->cell.internal_node.child0;
 	//		node_t** childs = &firstChild;
 
@@ -377,8 +379,8 @@ void compute_center_of_mass(node_t* node) {
 	node->pos[2] = p[2] * m;
 }
 
-void compute_force(node_t* root, node_t* body, double diameter, int where) {
-	double a[3] = { body->cell.leaf.acc[0], body->cell.leaf.acc[0],
+void compute_force(node_t* root, node_t* body, long double diameter, int where) {
+	long double a[3] = { body->cell.leaf.acc[0], body->cell.leaf.acc[0],
 			body->cell.leaf.acc[0] };
 
 	body->cell.leaf.acc[0] = 0.0;
@@ -396,9 +398,9 @@ void compute_force(node_t* root, node_t* body, double diameter, int where) {
 
 }
 
-void recourse_force(node_t* root, node_t* body, double dsq) {
+void recourse_force(node_t* root, node_t* body, long double dsq) {
 
-	double dr[3], drsq, nphi, scale, idr;
+	long double dr[3], drsq, nphi, scale, idr;
 
 	dr[0] = root->pos[0] - body->pos[0];
 	dr[0] = root->pos[1] - body->pos[1];
@@ -461,7 +463,7 @@ void recourse_force(node_t* root, node_t* body, double dsq) {
 
 void advance(node_t* body) {
 
-	double dvel[3], velh[3];
+	long double dvel[3], velh[3];
 
 	dvel[0] = body->cell.leaf.acc[0] * dthf;
 	dvel[1] = body->cell.leaf.acc[1] * dthf;
