@@ -14,21 +14,21 @@
 //node_t* null_childs[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
 node_t** bodies;
-long double diameter;
-long double seed = 1234567890;
-long double center[3];
+double diameter;
+double seed = 1234567890;
+double center[3];
 int curr = 0;
 node_t *root = NULL;
 
-//long double random_generator(long double min, long double max);
+//double random_generator(double min, double max);
 void create_bodies();
 void compute_center_and_diameter();
-void insert(node_t* sub_root, node_t* node, long double r);
-node_t* new_node(long double mass, long double pos[3], long double acc[3], long double vel[3],
+void insert(node_t* sub_root, node_t* node, double r);
+node_t* new_node(double mass, double pos[3], double acc[3], double vel[3],
 		int type);
 void compute_center_of_mass(node_t* node);
-void compute_force(node_t* root, node_t* body, long double diameter, int where);
-void recourse_force(node_t* root, node_t* body, long double dsq);
+void compute_force(node_t* root, node_t* body, double diameter, int where);
+void recourse_force(node_t* root, node_t* body, double dsq);
 void advance(node_t* body);
 void deallocate_tree(node_t* node);
 
@@ -47,9 +47,9 @@ int main(int argc, char* argv[]) {
 
 	fscanf(inputf, "%d", &nbodies);
 	fscanf(inputf, "%d", &steps);
-	fscanf(inputf, "%Lf", &dt);
-	fscanf(inputf, "%Lf", &eps);
-	fscanf(inputf, "%Lf", &tol);
+	fscanf(inputf, "%lf", &dt);
+	fscanf(inputf, "%lf", &eps);
+	fscanf(inputf, "%lf", &tol);
 
 
 
@@ -85,7 +85,7 @@ int main(int argc, char* argv[]) {
 		root->cell.childs[6] = NULL;
 		root->cell.childs[7] = NULL;
 
-		long double radius = diameter * 0.5;
+		double radius = diameter * 0.5;
 
 		int i = 0;
 		for (i = 0; i < nbodies; i++) {
@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
 	int i = 0;
 	outputf = fopen("output", "w");
 	for (i = 0; i < nbodies; i++) {
-		fprintf(outputf, "%Lf, %Lf, %Lf \n", bodies[i]->pos[0],
+		fprintf(outputf, "%lf, %lf, %lf \n", bodies[i]->pos[0],
 				bodies[i]->pos[1], bodies[i]->pos[2]);
 		fflush(outputf);
 	}
@@ -123,13 +123,13 @@ int main(int argc, char* argv[]) {
  Parameters: m = 2^31-1, a=48271.
  */
 
-//long double random_generator(long double min, long double max) {
+//double random_generator(double min, double max) {
 //	int m = INT_MAX;
 //	int a = 48271;
-//	long double q = m / a;
-//	long double r = m % a;
+//	double q = m / a;
+//	double r = m % a;
 //
-//	long double k = seed / q;
+//	double k = seed / q;
 //	seed = a * (seed - k * q) - r * k;
 //	if (seed < 1)
 //		seed += m;
@@ -146,7 +146,7 @@ void create_bodies() {
 	char line[100];
 	char* token;
 	char* end;
-	long double d = 0.0;
+	double d = 0.0;
 	//	const gsl_rng_type *T;
 	//	gsl_rng *r;
 	//	gsl_rng_env_setup();
@@ -156,10 +156,10 @@ void create_bodies() {
 
 	for (i = 0; i < nbodies; i++) {
 
-		printf("i = %d \n", i);
+//		printf("i = %d \n", i);
 		bodies[i] = malloc(sizeof(node_t));
 
-		//		long double mass = gsl_rng_uniform(r);
+		//		double mass = gsl_rng_uniform(r);
 		//		pos[0] = gsl_rng_uniform(r);
 		//		pos[1] = gsl_rng_uniform(r);
 		//		pos[2] = gsl_rng_uniform(r);
@@ -177,31 +177,31 @@ void create_bodies() {
 
 		d = strtold(token, &end);
 		bodies[i]->mass = d;
-		printf("%Lf\n",d);
+//		printf("%lf\n",d);
 		token = strtok(NULL, " ");
 		d = strtold(token, &end);
 		bodies[i]->pos[0] = d;
-		printf("%Lf\n",d);
+//		printf("%lf\n",d);
 		token = strtok(NULL, " ");
 		d = strtold(token, &end);
 		bodies[i]->pos[1] = d;
-		printf("%Lf\n",d);
+//		printf("%lf\n",d);
 		token = strtok(NULL, " ");
 		d = strtold(token, &end);
 		bodies[i]->pos[2] = d;
-		printf("%Lf\n",d);
+//		printf("%lf\n",d);
 		token = strtok(NULL, " ");
 		d = strtold(token, &end);
 		bodies[i]->cell.leaf.vel[0] = d;
-		printf("%Lf\n",d);
+//		printf("%lf\n",d);
 		token = strtok(NULL, " ");
 		d = strtold(token, &end);
 		bodies[i]->cell.leaf.vel[1] = d;
-		printf("%Lf\n",d);
+//		printf("%lf\n",d);
 		token = strtok(NULL, " ");
 		d = strtold(token, &end);
 		bodies[i]->cell.leaf.vel[2] = d;
-		printf("%Lf\n",d);
+//		printf("%lf\n",d);
 
 
 		bodies[i]->cell.leaf.acc[0] = 0.0;
@@ -213,7 +213,7 @@ void create_bodies() {
 	fclose(inputdataf);
 }
 void compute_center_and_diameter() {
-	long double min[3] = { 1.0e90, 1.0e90, 1.0e90 }, max[3] = { -1.0e90, -1.0e90,
+	double min[3] = { 1.0e90, 1.0e90, 1.0e90 }, max[3] = { -1.0e90, -1.0e90,
 			-1.0e90 }, pos[3];
 
 	int i = 0;
@@ -253,12 +253,12 @@ void compute_center_and_diameter() {
 	}
 }
 
-void insert(node_t* sub_root, node_t* node, long double r) {
+void insert(node_t* sub_root, node_t* node, double r) {
 
 	bool finished = FALSE;
 
 
-	long double x = 0.0, y = 0.0, z = 0.0;
+	double x = 0.0, y = 0.0, z = 0.0;
 
 	do {
 		int i = 0;
@@ -285,8 +285,8 @@ void insert(node_t* sub_root, node_t* node, long double r) {
 			r *= 0.5;
 			sub_root = sub_root->cell.childs[i];
 		} else {
-			long double rh = 0.5 * r;
-			long double position[3] = { sub_root->pos[0] - rh + x, sub_root->pos[1]
+			double rh = 0.5 * r;
+			double position[3] = { sub_root->pos[0] - rh + x, sub_root->pos[1]
 					- rh + y, sub_root->pos[2] - rh + z };
 			node_t *cell = new_node(0.0, position, NULL, NULL, 1);
 			//				insert(&(*cell), &(*node), rh);
@@ -314,7 +314,7 @@ void insert(node_t* sub_root, node_t* node, long double r) {
 	} while (!finished);
 }
 
-node_t* new_node(long double mass, long double pos[3], long double acc[3], long double vel[3],
+node_t* new_node(double mass, double pos[3], double acc[3], double vel[3],
 		int type) {
 	node_t* node = malloc(sizeof(node_t)); // "new" is like "malloc"
 	node->type = type;
@@ -344,7 +344,7 @@ node_t* new_node(long double mass, long double pos[3], long double acc[3], long 
 	return (node);
 }
 void compute_center_of_mass(node_t* node) {
-	long double m, p[3] = { 0.0, 0.0, 0.0 };
+	double m, p[3] = { 0.0, 0.0, 0.0 };
 	//		node_t* firstChild = node->cell.internal_node.child0;
 	//		node_t** childs = &firstChild;
 
@@ -354,7 +354,7 @@ void compute_center_of_mass(node_t* node) {
 	node->mass = 0.0;
 	int i;
 	for (i = 0; i < 8; i++) {
-		ch = node->cell.childs[i];
+		ch = &(*node->cell.childs[i]);
 		if (ch != NULL) {
 			node->cell.childs[i] = NULL;
 			node->cell.childs[j++] = ch;
@@ -379,8 +379,8 @@ void compute_center_of_mass(node_t* node) {
 	node->pos[2] = p[2] * m;
 }
 
-void compute_force(node_t* root, node_t* body, long double diameter, int where) {
-	long double a[3] = { body->cell.leaf.acc[0], body->cell.leaf.acc[0],
+void compute_force(node_t* root, node_t* body, double diameter, int where) {
+	double a[3] = { body->cell.leaf.acc[0], body->cell.leaf.acc[0],
 			body->cell.leaf.acc[0] };
 
 	body->cell.leaf.acc[0] = 0.0;
@@ -398,9 +398,9 @@ void compute_force(node_t* root, node_t* body, long double diameter, int where) 
 
 }
 
-void recourse_force(node_t* root, node_t* body, long double dsq) {
+void recourse_force(node_t* root, node_t* body, double dsq) {
 
-	long double dr[3], drsq, nphi, scale, idr;
+	double dr[3], drsq, nphi, scale, idr;
 
 	dr[0] = root->pos[0] - body->pos[0];
 	dr[0] = root->pos[1] - body->pos[1];
@@ -463,7 +463,7 @@ void recourse_force(node_t* root, node_t* body, long double dsq) {
 
 void advance(node_t* body) {
 
-	long double dvel[3], velh[3];
+	double dvel[3], velh[3];
 
 	dvel[0] = body->cell.leaf.acc[0] * dthf;
 	dvel[1] = body->cell.leaf.acc[1] * dthf;
