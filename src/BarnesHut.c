@@ -93,11 +93,18 @@ int main(int argc, char* argv[]) {
 
 		for (i = 0; i < nbodies; i++) {
 			compute_force(&(*root), &(*bodies[i]), diameter, step);
+		}
+		for (i = 0; i < nbodies; i++) {
 			advance(&(*bodies[i]));
 		}
 
 		deallocate_tree(root);
 
+		int p = 0;
+		for (p = 0; p < nbodies; p++)
+			printf("%lf, %lf, %lf \n", bodies[p]->pos[0], bodies[p]->pos[1],
+					bodies[p]->pos[2]);
+		printf("*************************************** \n");
 	}
 	int i = 0;
 	outputf = fopen("output", "w");
@@ -374,14 +381,14 @@ void compute_center_of_mass(node_t* node) {
 }
 
 void compute_force(node_t* root, node_t* body, double diameter, int where) {
-	double a[3] = { body->cell.leaf.acc[0], body->cell.leaf.acc[0],
-			body->cell.leaf.acc[0] };
+	double a[3] = { body->cell.leaf.acc[0], body->cell.leaf.acc[1],
+			body->cell.leaf.acc[2] };
 
 	body->cell.leaf.acc[0] = 0.0;
 	body->cell.leaf.acc[1] = 0.0;
 	body->cell.leaf.acc[2] = 0.0;
 
-	recourse_force(root, body, diameter * diameter * itolsq);
+	recourse_force(&(*root), &(*body), diameter * diameter * itolsq);
 
 	if (where > 0) {
 
@@ -397,8 +404,8 @@ void recourse_force(node_t* root, node_t* body, double dsq) {
 	double dr[3], drsq, nphi, scale, idr;
 
 	dr[0] = root->pos[0] - body->pos[0];
-	dr[0] = root->pos[1] - body->pos[1];
-	dr[0] = root->pos[2] - body->pos[2];
+	dr[1] = root->pos[1] - body->pos[1];
+	dr[2] = root->pos[2] - body->pos[2];
 
 	drsq = dr[0] * dr[0] + dr[1] * dr[1] + dr[2] * dr[2];
 
@@ -406,25 +413,28 @@ void recourse_force(node_t* root, node_t* body, double dsq) {
 		if (root->type == 1) {
 			dsq *= 0.25;
 			if (root->cell.childs[0] != NULL) {
-				recourse_force(root->cell.childs[0], body, dsq);
+				recourse_force(&(*root->cell.childs[0]), &(*body), dsq);
 				if (root->cell.childs[1] != NULL) {
-					recourse_force(root->cell.childs[1], body, dsq);
+					recourse_force(&(*root->cell.childs[1]), &(*body), dsq);
 					if (root->cell.childs[2] != NULL) {
-						recourse_force(root->cell.childs[2], body, dsq);
+						recourse_force(&(*root->cell.childs[2]), &(*body), dsq);
 						if (root->cell.childs[3] != NULL) {
-							recourse_force(root->cell.childs[3], body, dsq);
+							recourse_force(&(*root->cell.childs[3]), &(*body),
+									dsq);
 							if (root->cell.childs[4] != NULL) {
-								recourse_force(root->cell.childs[4], body, dsq);
+								recourse_force(&(*root->cell.childs[4]),
+										&(*body), dsq);
 								if (root->cell.childs[5] != NULL) {
-									recourse_force(root->cell.childs[5], body,
-											dsq);
+									recourse_force(&(*root->cell.childs[5]),
+											&(*body), dsq);
 									if (root->cell.childs[6] != NULL) {
-										recourse_force(root->cell.childs[6],
-												body, dsq);
+										recourse_force(
+												&(*root->cell.childs[6]),
+												&(*body), dsq);
 										if (root->cell.childs[7] != NULL) {
 											recourse_force(
-													root->cell.childs[7], body,
-													dsq);
+													&(*root->cell.childs[7]),
+													&(*body), dsq);
 										}
 									}
 								}
@@ -467,9 +477,9 @@ void advance(node_t* body) {
 	velh[1] = body->cell.leaf.vel[1] + dvel[1];
 	velh[2] = body->cell.leaf.vel[2] + dvel[2];
 
-	body->pos[0] += velh[0] + dt;
-	body->pos[1] += velh[1] + dt;
-	body->pos[2] += velh[2] + dt;
+	body->pos[0] += velh[0] * dt;
+	body->pos[1] += velh[1] * dt;
+	body->pos[2] += velh[2] * dt;
 
 	body->cell.leaf.vel[0] = velh[0] + dvel[0];
 	body->cell.leaf.vel[1] = velh[1] + dvel[1];
