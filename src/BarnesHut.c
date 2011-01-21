@@ -4,6 +4,7 @@
  *  Created on: 13/gen/2011
  *      Author: Claudio e Pino
  */
+typedef char * caddr_t;
 #include <stdio.h>
 #include <stdlib.h>
 #include "BarnesHut.h"
@@ -128,16 +129,51 @@ int main(int argc, char* argv[]) {
 		//		printf("*************************************** \n");
 	}
 	clockEnd = PAPI_get_real_usec();
-	PAPI_stop(event, values);
+	PAPI_stop(event_set, values);
 	int i = 0;
-	outputf = fopen("output", "w");
-	fprintf(outputf, "Tempo di esecuzione: %lld \n", clockEnd - clockStart);
-	fprintf(outputf, "Cache miss L2: %lld \n", values[0]);
-	fprintf(outputf, "# cicli: %lld \n", values[1]);
-	for (i = 0; i < nbodies; i++) {
-		fprintf(outputf, "%lf, %lf, %lf \n", bodies[i]->pos[0],
+	if(nbodies == 16384){
+		system("echo 'Host:' `hostname` >> output16384 ");
+		outputf = fopen("output16384", "a");
+		fprintf(outputf, "Tempo di esecuzione: %lld \n", clockEnd - clockStart);
+		fprintf(outputf, "Cache miss L2: %lld \n", values[0]);
+		fprintf(outputf, "# cicli: %lld \n", values[1]);
+		for (i = 0; i < nbodies; i++) {
+			fprintf(outputf, "%lf, %lf, %lf \n", bodies[i]->pos[0],
 				bodies[i]->pos[1], bodies[i]->pos[2]);
-	}
+		}
+	}else if(nbodies == 32768){
+		system("echo 'Host:' `hostname` >> output32768 ");
+                outputf = fopen("output32768", "a");
+                fprintf(outputf, "Tempo di esecuzione: %lld \n", clockEnd - clockStart);
+                fprintf(outputf, "Cache miss L2: %lld \n", values[0]);
+                fprintf(outputf, "# cicli: %lld \n", values[1]);
+                for (i = 0; i < nbodies; i++) {
+                        fprintf(outputf, "%lf, %lf, %lf \n", bodies[i]->pos[0],
+                                bodies[i]->pos[1], bodies[i]->pos[2]);
+                }
+	}else if(nbodies == 65536){
+                system("echo 'Host:' `hostname` >> output65536 ");
+                outputf = fopen("output65536", "a");
+                fprintf(outputf, "Tempo di esecuzione: %lld \n", clockEnd - clockStart);
+                fprintf(outputf, "Cache miss L2: %lld \n", values[0]);
+                fprintf(outputf, "# cicli: %lld \n", values[1]);
+                for (i = 0; i < nbodies; i++) {
+                        fprintf(outputf, "%lf, %lf, %lf \n", bodies[i]->pos[0],
+                                bodies[i]->pos[1], bodies[i]->pos[2]);
+                }
+        }else{
+                system("echo 'Host:' `hostname` >> output ");
+                outputf = fopen("output", "a");
+                fprintf(outputf, "Tempo di esecuzione: %lld \n", clockEnd - clockStart);
+                fprintf(outputf, "Cache miss L2: %lld \n", values[0]);
+                fprintf(outputf, "# cicli: %lld \n", values[1]);
+                for (i = 0; i < nbodies; i++) {
+                        fprintf(outputf, "%lf, %lf, %lf \n", bodies[i]->pos[0],
+                                bodies[i]->pos[1], bodies[i]->pos[2]);
+                }
+        }
+
+
 
 	fflush(outputf);
 	fclose(outputf);
