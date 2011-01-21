@@ -10,6 +10,7 @@
 #include <string.h>
 #include <math.h>
 #include "genlib.h"
+#include <papi.h>
 
 //node_t* null_childs[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
@@ -36,6 +37,10 @@ int main(int argc, char* argv[]) {
 
 	FILE *inputf;
 	FILE *outputf;
+	long_long clockStart, clockEnd;
+	long_long values[2];
+	int event_set = PAPI_NULL;
+	int events[2] = { PAPI_L2_TCM, PAPI_TOT_CYC };
 
 	char* inputfile = argv[1];
 	inputf = fopen(inputfile, "r");
@@ -60,9 +65,25 @@ int main(int argc, char* argv[]) {
 	epssq = eps * eps;
 	itolsq = 1.0 / (tol * tol);
 
+	if (PAPI_library_init(PAPI_VER_CURRENT) != PAPI_VER_CURRENT) {
+		printf("Inizializzazione della libreria di papi fallita \n");
+		exit(1);
+	}
+
+	if (PAPI_create_eventset(&event_set) != PAPI_OK) {
+		printf("E' andata a male la creazione dell'eventSet \n");
+		exit(1);
+	}
+
+	if (PAPI_add_events(event_set, events, 2) != PAPI_OK) {
+		printf("E' andata a male l'aggiunta degli eventi\n");
+		exit(1);
+	}
+
 	int step = 0;
 	root = NULL;
-	//TODO: far partire papi
+	PAPI_start(event_set);
+	clockStart = PAPI_get_real_usec();
 	for (step = 0; step < steps; step++) {
 		compute_center_and_diameter();
 
@@ -93,27 +114,32 @@ int main(int argc, char* argv[]) {
 
 		for (i = 0; i < nbodies; i++) {
 			compute_force(&(*root), &(*bodies[i]), diameter, step);
-		}
-		for (i = 0; i < nbodies; i++) {
 			advance(&(*bodies[i]));
 		}
+		//		for (i = 0; i < nbodies; i++) {
+		//		}
 
 		deallocate_tree(root);
 
-		int p = 0;
-		for (p = 0; p < nbodies; p++)
-			printf("%lf, %lf, %lf \n", bodies[p]->pos[0], bodies[p]->pos[1],
-					bodies[p]->pos[2]);
-		printf("*************************************** \n");
+		//		int p = 0;
+		//		for (p = 0; p < nbodies; p++)
+		//			printf("%lf, %lf, %lf \n", bodies[p]->pos[0], bodies[p]->pos[1],
+		//					bodies[p]->pos[2]);
+		//		printf("*************************************** \n");
 	}
+	clockEnd = PAPI_get_real_usec();
+	PAPI_stop(event, values);
 	int i = 0;
 	outputf = fopen("output", "w");
+	fprintf(outputf, "Tempo di esecuzione: %lld \n", clockEnd - clockStart);
+	fprintf(outputf, "Cache miss L2: %lld \n", values[0]);
+	fprintf(outputf, "# cicli: %lld \n", values[1]);
 	for (i = 0; i < nbodies; i++) {
 		fprintf(outputf, "%lf, %lf, %lf \n", bodies[i]->pos[0],
 				bodies[i]->pos[1], bodies[i]->pos[2]);
-		fflush(outputf);
 	}
 
+	fflush(outputf);
 	fclose(outputf);
 	printf("Esecuzione completata\n");
 
