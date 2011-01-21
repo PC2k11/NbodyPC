@@ -51,13 +51,10 @@ int main(int argc, char* argv[]) {
 	fscanf(inputf, "%lf", &eps);
 	fscanf(inputf, "%lf", &tol);
 
-
-
 	fclose(inputf);
 
 	bodies = malloc(nbodies * sizeof(node_t*));
 	create_bodies();
-
 
 	dthf = 0.5 * dt;
 	epssq = eps * eps;
@@ -141,7 +138,7 @@ int main(int argc, char* argv[]) {
 //}
 
 void create_bodies() {
-	FILE* inputdataf = fopen("inputData","r");
+	FILE* inputdataf = fopen("inputData", "r");
 	int i = 0;
 	char line[100];
 	char* token;
@@ -156,7 +153,7 @@ void create_bodies() {
 
 	for (i = 0; i < nbodies; i++) {
 
-//		printf("i = %d \n", i);
+		//		printf("i = %d \n", i);
 		bodies[i] = malloc(sizeof(node_t));
 
 		//		double mass = gsl_rng_uniform(r);
@@ -170,38 +167,37 @@ void create_bodies() {
 
 		fgets(line, 100, inputdataf);
 
-
-//		printf("%s\n", line);
+		//		printf("%s\n", line);
 
 		token = strtok(line, " ");
 
 		d = strtold(token, &end);
 		bodies[i]->mass = d;
-//		printf("%lf\n",d);
+		//		printf("%lf\n",d);
 		token = strtok(NULL, " ");
 		d = strtold(token, &end);
 		bodies[i]->pos[0] = d;
-//		printf("%lf\n",d);
+		//		printf("%lf\n",d);
 		token = strtok(NULL, " ");
 		d = strtold(token, &end);
 		bodies[i]->pos[1] = d;
-//		printf("%lf\n",d);
+		//		printf("%lf\n",d);
 		token = strtok(NULL, " ");
 		d = strtold(token, &end);
 		bodies[i]->pos[2] = d;
-//		printf("%lf\n",d);
+		//		printf("%lf\n",d);
 		token = strtok(NULL, " ");
 		d = strtold(token, &end);
 		bodies[i]->cell.leaf.vel[0] = d;
-//		printf("%lf\n",d);
+		//		printf("%lf\n",d);
 		token = strtok(NULL, " ");
 		d = strtold(token, &end);
 		bodies[i]->cell.leaf.vel[1] = d;
-//		printf("%lf\n",d);
+		//		printf("%lf\n",d);
 		token = strtok(NULL, " ");
 		d = strtold(token, &end);
 		bodies[i]->cell.leaf.vel[2] = d;
-//		printf("%lf\n",d);
+		//		printf("%lf\n",d);
 
 
 		bodies[i]->cell.leaf.acc[0] = 0.0;
@@ -240,27 +236,25 @@ void compute_center_and_diameter() {
 		if (max[2] < pos[2])
 			max[2] = pos[2];
 
-		diameter = max[0] - min[0];
-		if (diameter < (max[1] - min[1]))
-			diameter = (max[1] - min[1]);
-
-		if (diameter < (max[2] - min[2]))
-			diameter = (max[2] - min[2]);
-
-		center[0] = (max[0] + min[0]) * 0.5;
-		center[1] = (max[1] + min[2]) * 0.5;
-		center[1] = (max[1] + min[2]) * 0.5;
 	}
+	diameter = max[0] - min[0];
+	if (diameter < (max[1] - min[1]))
+		diameter = (max[1] - min[1]);
+
+	if (diameter < (max[2] - min[2]))
+		diameter = (max[2] - min[2]);
+
+	center[0] = (max[0] + min[0]) * 0.5;
+	center[1] = (max[1] + min[1]) * 0.5;
+	center[2] = (max[2] + min[2]) * 0.5;
 }
 
 void insert(node_t* sub_root, node_t* node, double r) {
 
 	bool finished = FALSE;
 
-
-	double x = 0.0, y = 0.0, z = 0.0;
-
 	do {
+		double x = 0.0, y = 0.0, z = 0.0;
 		int i = 0;
 		if (sub_root->pos[0] < node->pos[0]) {
 			i = 1;
@@ -280,7 +274,7 @@ void insert(node_t* sub_root, node_t* node, double r) {
 		if (sub_root->cell.childs[i] == NULL) {
 			sub_root->cell.childs[i] = node;
 			finished = TRUE;
-		} else if (node->type == 1) {
+		} else if (sub_root->cell.childs[i]->type == 1) {
 			//				insert(&(*sub_root->cell.childs[i]), &(*node), 0.5 * r);
 			r *= 0.5;
 			sub_root = sub_root->cell.childs[i];
@@ -309,7 +303,7 @@ void insert(node_t* sub_root, node_t* node, double r) {
 			sub_root = cell;
 			node = tmp;
 			r = rh;
-//			insert(&(*cell), &(*sub_root->cell.childs[i]), rh);
+			//			insert(&(*cell), &(*sub_root->cell.childs[i]), rh);
 		}
 	} while (!finished);
 }
