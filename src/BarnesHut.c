@@ -338,7 +338,7 @@ node_t* new_node(double mass, double pos[3], double acc[3], double vel[3],
 	return (node);
 }
 void compute_center_of_mass(node_t* node) {
-	double m, p[3] = { 0.0, 0.0, 0.0 };
+	double m = 0, p[3] = { 0.0, 0.0, 0.0 };
 	//		node_t* firstChild = node->cell.internal_node.child0;
 	//		node_t** childs = &firstChild;
 
@@ -361,9 +361,9 @@ void compute_center_of_mass(node_t* node) {
 
 			m = ch->mass;
 			node->mass += m;
-			p[0] = ch->pos[0] * m;
-			p[1] = ch->pos[1] * m;
-			p[2] = ch->pos[2] * m;
+			p[0] += ch->pos[0] * m;
+			p[1] += ch->pos[1] * m;
+			p[2] += ch->pos[2] * m;
 		}
 	}
 
